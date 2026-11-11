@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -9,40 +10,50 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+// @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
     private final Map<Long, User> users = new HashMap<>();
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserController.class);
+
     @GetMapping
     public Collection<User> getUsers() {
+        log.info("Запрошен весь список пользователей!");
         return users.values();
     }
 
     private void validateUser(User user) {
         String email = user.getEmail();
         if (email == null || email.isBlank()) {
+            log.warn("Валидация не пройдена: -> {}", user.getEmail());
             throw new ValidationException("Электронная почта не может быть пустой!");
         }
 
         if (!email.contains("@")) {
+            log.warn("Валидация не пройдена: -> {}", user.getEmail());
             throw new ValidationException("Почта должна содержать символ @!");
         }
 
         String login = user.getLogin();
         if (login == null || login.isBlank()) {
+            log.warn("Валидация не пройдена: -> {}", user.getLogin());
             throw new ValidationException("Логин не может быть пустым!");
         }
         if (login.contains(" ")) {
+            log.warn("Валидация не пройдена: -> {}", user.getLogin());
             throw new ValidationException("Логин не может быть пустым!");
         }
 
         Instant now = Instant.now();
         Instant birthday = user.getBirthday();
         if (birthday == null) {
+            log.warn("Валидация не пройдена: -> дата рождения должна присутствовать!");
             throw new ValidationException("Дата рождения должна присутствовать!");
         }
         if (user.getBirthday().isAfter(now)) {
+            log.warn("Валидация не пройдена: -> {}", birthday);
             throw new ValidationException("Дата рождения не может быть в будущем!");
         }
 
@@ -51,7 +62,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/add-user")
+    @PostMapping()
     public User createUser(@RequestBody User user) {
         validateUser(user);
         user.setId(getNextId());
@@ -59,17 +70,16 @@ public class UserController {
         return user;
     }
 
-    @PutMapping("/update-user")
-    public User updateUser(@RequestBody User newUser) {
-        if (newUser.getId() == null) {
-            throw new ValidationException("Id должен быть указан!");
+    @PutMapping("/update-user/{id}")
+    public User updateUser(@PathVariable Long id, @RequestBody User newUser) {
+        if (!users.containsKey(id)) {
+            log.warn("Пользователь с id={} не найден — обновление невозможно", id);
+            throw new ValidationException("Пользователь с Id " + id + " не найден!");
         }
-
         validateUser(newUser);
-
-        if (!users.containsKey(newUser.getId())) {
-            throw new ValidationException("Пользователь с Id " +  newUser.getId() + " не найден!");
-        }
+        newUser.setId(id);
+        users.put(id, newUser);
+        log.info("Пользователь с {} обновлен!", id);
 
         users.put(newUser.getId(), newUser);
         return newUser;
@@ -81,6 +91,6 @@ public class UserController {
                 .mapToLong(id -> id)
                 .max()
                 .orElse(0);
-        return ++currentMaxId;
+        return currentMaxId + 1;
     }
 }

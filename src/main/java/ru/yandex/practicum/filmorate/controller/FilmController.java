@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
@@ -19,32 +21,40 @@ public class FilmController {
             .toInstant();
     private final Map<Long, Film> films = new HashMap<>();
 
+    // private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FilmController.class);
+
     @GetMapping
     public Collection<Film> getFilms() {
+        log.info("Запрошен весь список фильмов!");
         return films.values();
     }
 
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
+            log.warn("Валидация не пройдена: -> {}", film.getName());
             throw new ValidationException("Имя фильма не может быть пустым!");
         }
 
         String description = film.getDescription();
         if (description != null && description.length() > 200) {
+            log.warn("Валидация не пройдена: -> {}", description);
             throw new ValidationException("Максимальная длина описания равна 200 символов!");
         }
 
         Instant releaseDate = film.getReleaseDate();
         if (releaseDate == null || releaseDate.isBefore(DATE_RELEASE)) {
+            log.warn("Валидация не пройдена: -> {}", releaseDate);
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
 
         if (film.getDuration() <= 0) {
+            log.warn("Валидация не пройдена: -> {}", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }
+
     }
 
-    @PostMapping("/add-film")
+    @PostMapping()
     public Film addFilm(@RequestBody Film film) {
         validateFilm(film);
         film.setId(getNextId());
@@ -52,17 +62,17 @@ public class FilmController {
         return film;
     }
 
-    @PutMapping("/update-film")
-    public Film updateFilm(@RequestBody Film newFilm) {
-        if (newFilm.getId() == null) {
-            throw new ValidationException("Id должен быть указан!");
+    @PutMapping("/film-update/{id}")
+    public Film updateFilm(@PathVariable Long id, @RequestBody Film newFilm) {
+        if (!films.containsKey(id)) {
+            log.warn("Фильм с id={} не найден — обновление невозможно", id);
+            throw new ValidationException("Фильм с Id " + id + " не найден!");
         }
 
         validateFilm(newFilm);
-
-        if (!films.containsKey(newFilm.getId())) {
-            throw new ValidationException("Пользователь с Id " +  newFilm.getId() + " не найден!");
-        }
+        newFilm.setId(id);
+        films.put(id, newFilm);
+        log.info("Фильм с {} обновлен!", id);
 
         films.put(newFilm.getId(), newFilm);
         return newFilm;
@@ -74,8 +84,6 @@ public class FilmController {
                 .mapToLong(id -> id)
                 .max()
                 .orElse(0);
-        return ++currentMaxId;
+        return currentMaxId + 1;
     }
-
-
 }
