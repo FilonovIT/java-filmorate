@@ -14,7 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    final LocalDate DATE_RELEASE = LocalDate.of(1895, 12, 28);
+    final LocalDate dateRelease = LocalDate.of(1895, 12, 28);
     private final Map<Long, Film> films = new HashMap<>();
 
     // private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FilmController.class);
