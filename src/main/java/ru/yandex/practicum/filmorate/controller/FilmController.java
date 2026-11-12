@@ -38,7 +38,7 @@ public class FilmController {
         }
 
         LocalDate releaseDate = film.getReleaseDate();
-        if (releaseDate == null || releaseDate.isBefore(DATE_RELEASE)) {
+        if (releaseDate == null || releaseDate.isBefore(dateRelease)) {
             log.warn("Валидация не пройдена: -> {}", releaseDate);
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
         }
