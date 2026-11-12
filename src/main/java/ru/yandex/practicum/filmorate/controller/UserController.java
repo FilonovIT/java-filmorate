@@ -15,7 +15,7 @@ import java.util.Map;
 public class UserController {
     private final Map<Long, User> users = new HashMap<>();
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserController.class);
+    private final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserController.class);
 
     @GetMapping
     public Collection<User> getUsers() {
