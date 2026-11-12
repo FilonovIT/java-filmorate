@@ -1,11 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,13 +45,13 @@ public class UserController {
             throw new ValidationException("Логин не может быть пустым!");
         }
 
-        Instant now = Instant.now();
-        Instant birthday = user.getBirthday();
+
+        LocalDate birthday = user.getBirthday();
         if (birthday == null) {
             log.warn("Валидация не пройдена: -> дата рождения должна присутствовать!");
             throw new ValidationException("Дата рождения должна присутствовать!");
         }
-        if (user.getBirthday().isAfter(now)) {
+        if (user.getBirthday().isAfter(LocalDate.now())) {
             log.warn("Валидация не пройдена: -> {}", birthday);
             throw new ValidationException("Дата рождения не может быть в будущем!");
         }
@@ -70,18 +69,24 @@ public class UserController {
         return user;
     }
 
-    @PutMapping("/update-user/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody User newUser) {
+    @PutMapping()
+    public User updateUser(@RequestBody User newUser) {
+        Long id = newUser.getId();
+        if (id == null) {
+            log.warn("Валидация не пройдена, не передан id!");
+            throw new ValidationException("Id должен быть передан!");
+        }
+
         if (!users.containsKey(id)) {
             log.warn("Пользователь с id={} не найден — обновление невозможно", id);
             throw new ValidationException("Пользователь с Id " + id + " не найден!");
         }
+
         validateUser(newUser);
-        newUser.setId(id);
+
         users.put(id, newUser);
         log.info("Пользователь с {} обновлен!", id);
 
-        users.put(newUser.getId(), newUser);
         return newUser;
     }
 
