@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-// @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -61,7 +60,7 @@ public class UserController {
         }
     }
 
-    @PostMapping()
+    @PostMapping
     public User createUser(@RequestBody User user) {
         validateUser(user);
         user.setId(getNextId());
@@ -69,7 +68,7 @@ public class UserController {
         return user;
     }
 
-    @PutMapping()
+    @PutMapping
     public User updateUser(@RequestBody User newUser) {
         Long id = newUser.getId();
         if (id == null) {

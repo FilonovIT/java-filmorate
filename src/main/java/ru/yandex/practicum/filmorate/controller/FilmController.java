@@ -14,10 +14,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/films")
 public class FilmController {
+    final int lenghtDescription = 200;
     final LocalDate dateRelease = LocalDate.of(1895, 12, 28);
     private final Map<Long, Film> films = new HashMap<>();
-
-    // private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FilmController.class);
 
     @GetMapping
     public Collection<Film> getFilms() {
@@ -32,7 +31,7 @@ public class FilmController {
         }
 
         String description = film.getDescription();
-        if (description != null && description.length() > 200) {
+        if (description != null && description.length() > lenghtDescription) {
             log.warn("Валидация не пройдена: -> {}", description);
             throw new ValidationException("Максимальная длина описания равна 200 символов!");
         }
@@ -50,7 +49,7 @@ public class FilmController {
 
     }
 
-    @PostMapping()
+    @PostMapping
     public Film addFilm(@RequestBody Film film) {
         validateFilm(film);
         film.setId(getNextId());
@@ -58,7 +57,7 @@ public class FilmController {
         return film;
     }
 
-    @PutMapping()
+    @PutMapping
     public Film updateFilm(@RequestBody Film newFilm) {
         Long id = newFilm.getId();
 
